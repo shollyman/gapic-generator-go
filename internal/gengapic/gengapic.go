@@ -164,7 +164,7 @@ func gen(genReq *pluginpb.CodeGeneratorRequest) (*pluginpb.CodeGeneratorResponse
 		Content: proto.String(g.pt.String()),
 	})
 
-	if g.opts.metadata {
+	if g.opts.generateGAPICMetadata {
 		g.reset()
 		g.genGapicMetadataFile()
 		g.resp.File = append(g.resp.File, &pluginpb.CodeGeneratorResponse_File{

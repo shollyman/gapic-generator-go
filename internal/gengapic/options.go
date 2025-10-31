@@ -82,8 +82,7 @@ type options struct {
 	outDir string
 
 	// Should GAPIC metadata be generated
-	// TODO: rename this in a subsequent refactor
-	metadata bool
+	generateGAPICMetadata bool
 
 	// Are the input artifacts from a DIREGAPIC source
 	// TODO: rename this in a subsequent refactor
@@ -252,7 +251,7 @@ func withGoGAPICPackage(s string) configOption {
 // enableGAPICMetadata enables generation of GAPIC metadata.
 func enableGAPICMetadata() configOption {
 	return func(cfg *options) error {
-		cfg.metadata = true
+		cfg.generateGAPICMetadata = true
 		return nil
 	}
 }
