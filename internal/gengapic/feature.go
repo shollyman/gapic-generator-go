@@ -35,6 +35,7 @@ const (
 	MTLSHardBoundTokensFeature       featureID = "mtls_hard_bound_tokens"
 	OpenTelemetryAttributesFeature   featureID = "open_telemetry_attributes"
 	OrderedRoutingHeadersFeature     featureID = "ordered_routing_headers"
+	OpaqueGenerationFeature          featureID = "opaque_generation"
 	SelectiveGapicGenerationFeature  featureID = "selective_gapic_generation"
 	WrapperTypesForPageSizeFeature   featureID = "wrapper_types_for_page_size"
 )
@@ -60,6 +61,10 @@ var featureRegistry = map[featureID]*featureInfo{
 	MTLSHardBoundTokensFeature: {
 		Description: "support MTLS hard bound tokens",
 		TrackingID:  "b/327916505",
+	},
+	OpaqueGenerationFeature: {
+		Description: "switch the gapic generator to emit code that conforms to the protobuf opaque API level",
+		TrackingID:  "b/549762318",
 	},
 	OpenTelemetryAttributesFeature: {
 		Description: "Enable OpenTelemetry attributes support (Service Identity, Resource Names, URL Templates).",

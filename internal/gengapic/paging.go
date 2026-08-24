@@ -307,35 +307,60 @@ func (g *generator) internalFetchSetup(outType *descriptorpb.DescriptorProto, ou
 
 	p("  resp := &%s.%s{}", outSpec.Name, outType.GetName())
 	p(`  if pageToken != "" {`)
-	p("    req.PageToken = %s", tok)
+	if g.featureEnabled(OpaqueGenerationFeature) {
+		p("    req.SetPageToken(%s)", tok)
+	} else {
+		p("    req.PageToken = %s", tok)
+	}
 	p("  }")
 	p("  if pageSize > math.MaxInt32 {")
-	internalPageSizeSetter(p, pageSize, "math.MaxInt32")
+	internalPageSizeSetter(p, pageSize, g.featureEnabled(OpaqueGenerationFeature), "math.MaxInt32")
 	p("  } else if pageSize != 0 {")
-	internalPageSizeSetter(p, pageSize, "pageSize")
+	internalPageSizeSetter(p, pageSize, g.featureEnabled(OpaqueGenerationFeature), "pageSize")
 	p("  }")
 }
 
 // internalPageSizeSetter is a helper for injecting the value setting expression.
 // The incoming setVal is based on an incoming set int32-based value variable,
 // typically either labelled as 'pageSize' or 'math.MaxInt32'.
-func internalPageSizeSetter(p func(s string, a ...interface{}), pageSize *descriptorpb.FieldDescriptorProto, setVal string) {
+// opaqueMode refers to whether the setter uses generated code compatible with the
+// older protobuf open struct API, or the newer opaque API.
+func internalPageSizeSetter(p func(s string, a ...interface{}), pageSize *descriptorpb.FieldDescriptorProto, opaqueMode bool, setVal string) {
 	cName := snakeToCamel(pageSize.GetName())
 	switch pageSize.GetType() {
 	case descriptorpb.FieldDescriptorProto_TYPE_INT32:
 		if pageSize.GetProto3Optional() {
-			p("req.%s = proto.Int32(int32(%s))", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(proto.Int32(int32(%s)))", cName, setVal)
+
+			} else {
+				p("req.%s = proto.Int32(int32(%s))", cName, setVal)
+			}
 		} else {
 			if setVal != "math.MaxInt32" {
 				setVal = fmt.Sprintf("int32(%s)", setVal)
 			}
-			p("req.%s = %s", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(%s)", cName, setVal)
+
+			} else {
+				p("req.%s = %s", cName, setVal)
+			}
 		}
 	case descriptorpb.FieldDescriptorProto_TYPE_UINT32:
 		if pageSize.GetProto3Optional() {
-			p("req.%s = proto.Uint32(uint32(%s))", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(proto.Uint32(uint32(%s)))", cName, setVal)
+			} else {
+				p("req.%s = proto.Uint32(uint32(%s))", cName, setVal)
+			}
 		} else {
-			p("req.%s = uint32(%s)", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(uint32(%s))", cName, setVal)
+			} else {
+				p("req.%s = uint32(%s)", cName, setVal)
+
+			}
 		}
 	case descriptorpb.FieldDescriptorProto_TYPE_MESSAGE:
 		switch pageSize.GetTypeName() {
@@ -343,9 +368,18 @@ func internalPageSizeSetter(p func(s string, a ...interface{}), pageSize *descri
 			if setVal != "math.MaxInt32" {
 				setVal = fmt.Sprintf("int32(%s)", setVal)
 			}
-			p("req.%s = &wrapperspb.Int32Value{Value: %s}", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(&wrapperspb.Int32Value{Value: %s})", cName, setVal)
+
+			} else {
+				p("req.%s = &wrapperspb.Int32Value{Value: %s}", cName, setVal)
+			}
 		case ".google.protobuf.UInt32Value":
-			p("req.%s = &wrapperspb.UInt32Value{Value: uint32(%s)}", cName, setVal)
+			if opaqueMode {
+				p("req.Set%s(&wrapperspb.UInt32Value{Value: uint32(%s)})", cName, setVal)
+			} else {
+				p("req.%s = &wrapperspb.UInt32Value{Value: uint32(%s)}", cName, setVal)
+			}
 		}
 	}
 }
